@@ -127,7 +127,7 @@ Book book = new Book.Builder()
 
 ## 👨‍💻 Auteur
 
-**[Ton Nom]** - M1 DEVFLSK  
+**Victor Hubert** - M1 DEVFLSK  
 Projet réalisé dans le cadre du cours d'Architecture Logicielle
 
 ---
