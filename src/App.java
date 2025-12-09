@@ -1,6 +1,6 @@
 import dto.BookDTO;
 import dto.LoanDTO;
-import dto.UserDTO;
+import model.User;
 import service.BookService;
 import service.LoanService;
 import service.NotificationService;
@@ -11,7 +11,7 @@ import java.util.Scanner;
 
 /**
  * Application principale - Point d'entrée
- * Orchestre tous les services et affiche le menu console
+ * Conforme aux consignes du Mini Projet Partie 1
  */
 public class App {
 
@@ -21,18 +21,19 @@ public class App {
     private static LoanService loanService;
     private static NotificationService notificationService;
 
+    // Utilisateur actuellement connecté (null si personne n'est connecté)
+    private static User currentUser = null;
+
     public static void main(String[] args) {
         // Initialisation des services
         initializeServices();
-
-        // Affichage du message de bienvenue
-        displayWelcome();
 
         // Boucle principale du menu
         boolean running = true;
         while (running) {
             displayMenu();
             int choice = readIntInput();
+            scanner.nextLine(); // Consomme le retour à la ligne
 
             try {
                 running = handleMenuChoice(choice);
@@ -58,33 +59,20 @@ public class App {
         loanService.addObserver(notificationService);
     }
 
-    private static void displayWelcome() {
-        System.out.println("\n╔════════════════════════════════════════════════════╗");
-        System.out.println("║                                                    ║");
-        System.out.println("║        📚 MA PETITE BIBLIOTHÈQUE 📚               ║");
-        System.out.println("║                                                    ║");
-        System.out.println("║     Projet Architecture Logicielle - M1 DEVFLSK   ║");
-        System.out.println("║                                                    ║");
-        System.out.println("╚════════════════════════════════════════════════════╝\n");
-    }
-
+    /**
+     * Affiche le menu conforme aux consignes
+     */
     private static void displayMenu() {
-        System.out.println("\n╔════════════════════════════════════════════════════╗");
-        System.out.println("║                    MENU PRINCIPAL                  ║");
-        System.out.println("╠════════════════════════════════════════════════════╣");
-        System.out.println("║  1. Afficher tous les livres                       ║");
-        System.out.println("║  2. Afficher les livres disponibles                ║");
-        System.out.println("║  3. Rechercher un livre par titre                  ║");
-        System.out.println("║  4. Rechercher un livre par auteur                 ║");
-        System.out.println("║  5. Ajouter un nouveau livre                       ║");
-        System.out.println("║  6. Emprunter un livre                             ║");
-        System.out.println("║  7. Retourner un livre                             ║");
-        System.out.println("║  8. Afficher les emprunts en cours                 ║");
-        System.out.println("║  9. Afficher tous les emprunts                     ║");
-        System.out.println("║ 10. Afficher les utilisateurs                      ║");
-        System.out.println("║ 11. Changer le mode de notification                ║");
-        System.out.println("║  0. Quitter                                        ║");
-        System.out.println("╚════════════════════════════════════════════════════╝");
+        System.out.println("\n=== Ma Petite Bibliothèque ===");
+        System.out.println("1. S'inscrire");
+        System.out.println("2. Se connecter");
+        System.out.println("3. Ajouter un livre (admin seulement)");
+        System.out.println("4. Voir tous les livres");
+        System.out.println("5. Rechercher un livre par titre");
+        System.out.println("6. Emprunter un livre");
+        System.out.println("7. Retourner un livre");
+        System.out.println("8. Voir mes emprunts");
+        System.out.println("9. Quitter");
         System.out.print("Votre choix : ");
     }
 
@@ -92,18 +80,15 @@ public class App {
         System.out.println(); // Ligne vide pour la lisibilité
 
         switch (choice) {
-            case 1 -> displayAllBooks();
-            case 2 -> displayAvailableBooks();
-            case 3 -> searchBooksByTitle();
-            case 4 -> searchBooksByAuthor();
-            case 5 -> addNewBook();
+            case 1 -> register();
+            case 2 -> login();
+            case 3 -> addNewBook();
+            case 4 -> displayAllBooks();
+            case 5 -> searchBooksByTitle();
             case 6 -> borrowBook();
             case 7 -> returnBook();
-            case 8 -> displayActiveLoans();
-            case 9 -> displayAllLoans();
-            case 10 -> displayUsers();
-            case 11 -> changeNotificationMode();
-            case 0 -> {
+            case 8 -> displayMyLoans();
+            case 9 -> {
                 return false; // Quitte l'application
             }
             default -> System.out.println("❌ Choix invalide. Veuillez réessayer.");
@@ -112,73 +97,68 @@ public class App {
         return true; // Continue la boucle
     }
 
-    // ==================== GESTION DES LIVRES ====================
+    // ==================== 1. S'INSCRIRE ====================
 
-    private static void displayAllBooks() {
-        List<BookDTO> books = bookService.getAllBooks();
-        if (books.isEmpty()) {
-            System.out.println("📚 Aucun livre dans la bibliothèque.");
-            return;
-        }
+    private static void register() {
+        System.out.println("=== INSCRIPTION ===");
 
-        System.out.println("📚 LISTE DE TOUS LES LIVRES (" + books.size() + ")");
-        System.out.println("═".repeat(70));
-        for (BookDTO book : books) {
-            System.out.println(book);
+        System.out.print("Identifiant : ");
+        String userId = scanner.nextLine();
+
+        System.out.print("Prénom : ");
+        String firstName = scanner.nextLine();
+
+        System.out.print("Nom : ");
+        String lastName = scanner.nextLine();
+
+        System.out.print("Email : ");
+        String email = scanner.nextLine();
+
+        System.out.print("Mot de passe : ");
+        String password = scanner.nextLine();
+
+        userService.register(userId, firstName, lastName, email, password);
+        System.out.println("✅ Inscription réussie ! Vous pouvez maintenant vous connecter.");
+    }
+
+    // ==================== 2. SE CONNECTER ====================
+
+    private static void login() {
+        System.out.println("=== CONNEXION ===");
+
+        System.out.print("Identifiant : ");
+        String userId = scanner.nextLine();
+
+        System.out.print("Mot de passe : ");
+        String password = scanner.nextLine();
+
+        User user = userService.login(userId, password);
+        if (user != null) {
+            currentUser = user;
+            System.out.println("✅ Connexion réussie ! Bienvenue " + user.getFullName());
+            if (user.isAdmin()) {
+                System.out.println("🔑 Vous êtes connecté en tant qu'administrateur");
+            }
+        } else {
+            System.out.println("❌ Identifiant ou mot de passe incorrect");
         }
     }
 
-    private static void displayAvailableBooks() {
-        List<BookDTO> books = bookService.getAvailableBooks();
-        if (books.isEmpty()) {
-            System.out.println("📚 Aucun livre disponible pour le moment.");
-            return;
-        }
-
-        System.out.println("✅ LIVRES DISPONIBLES (" + books.size() + ")");
-        System.out.println("═".repeat(70));
-        for (BookDTO book : books) {
-            System.out.println(book);
-        }
-    }
-
-    private static void searchBooksByTitle() {
-        System.out.print("Entrez le titre (ou une partie) : ");
-        String keyword = scanner.nextLine();
-
-        List<BookDTO> books = bookService.searchBooksByTitle(keyword);
-        if (books.isEmpty()) {
-            System.out.println("❌ Aucun livre trouvé avec le titre : " + keyword);
-            return;
-        }
-
-        System.out.println("🔍 RÉSULTATS DE LA RECHERCHE (" + books.size() + ")");
-        System.out.println("═".repeat(70));
-        for (BookDTO book : books) {
-            System.out.println(book);
-        }
-    }
-
-    private static void searchBooksByAuthor() {
-        System.out.print("Entrez l'auteur : ");
-        String author = scanner.nextLine();
-
-        List<BookDTO> books = bookService.searchBooksByAuthor(author);
-        if (books.isEmpty()) {
-            System.out.println("❌ Aucun livre trouvé pour l'auteur : " + author);
-            return;
-        }
-
-        System.out.println("🔍 RÉSULTATS DE LA RECHERCHE (" + books.size() + ")");
-        System.out.println("═".repeat(70));
-        for (BookDTO book : books) {
-            System.out.println(book);
-        }
-    }
+    // ==================== 3. AJOUTER UN LIVRE (ADMIN SEULEMENT) ====================
 
     private static void addNewBook() {
-        System.out.println("➕ AJOUTER UN NOUVEAU LIVRE");
-        System.out.println("─".repeat(50));
+        // Vérification : utilisateur connecté et admin
+        if (currentUser == null) {
+            System.out.println("❌ Vous devez être connecté pour ajouter un livre");
+            return;
+        }
+
+        if (!currentUser.isAdmin()) {
+            System.out.println("❌ Seuls les administrateurs peuvent ajouter des livres");
+            return;
+        }
+
+        System.out.println("=== AJOUTER UN NOUVEAU LIVRE ===");
 
         System.out.print("ISBN : ");
         String isbn = scanner.nextLine();
@@ -200,35 +180,77 @@ public class App {
         System.out.println("✅ Livre ajouté avec succès !");
     }
 
-    // ==================== GESTION DES EMPRUNTS ====================
+    // ==================== 4. VOIR TOUS LES LIVRES ====================
+
+    private static void displayAllBooks() {
+        List<BookDTO> books = bookService.getAllBooks();
+        if (books.isEmpty()) {
+            System.out.println("📚 Aucun livre dans la bibliothèque.");
+            return;
+        }
+
+        System.out.println("=== TOUS LES LIVRES (" + books.size() + ") ===");
+        for (BookDTO book : books) {
+            System.out.println(book);
+        }
+    }
+
+    // ==================== 5. RECHERCHER UN LIVRE PAR TITRE ====================
+
+    private static void searchBooksByTitle() {
+        System.out.print("Entrez le titre (ou une partie) : ");
+        String keyword = scanner.nextLine();
+
+        List<BookDTO> books = bookService.searchBooksByTitle(keyword);
+        if (books.isEmpty()) {
+            System.out.println("❌ Aucun livre trouvé avec le titre : " + keyword);
+            return;
+        }
+
+        System.out.println("=== RÉSULTATS DE LA RECHERCHE (" + books.size() + ") ===");
+        for (BookDTO book : books) {
+            System.out.println(book);
+        }
+    }
+
+    // ==================== 6. EMPRUNTER UN LIVRE ====================
 
     private static void borrowBook() {
-        System.out.println("📤 EMPRUNTER UN LIVRE");
-        System.out.println("─".repeat(50));
+        // Vérification : utilisateur connecté
+        if (currentUser == null) {
+            System.out.println("❌ Vous devez être connecté pour emprunter un livre");
+            return;
+        }
+
+        System.out.println("=== EMPRUNTER UN LIVRE ===");
 
         System.out.print("ISBN du livre : ");
         String isbn = scanner.nextLine();
 
-        System.out.print("ID de l'utilisateur : ");
-        String userId = scanner.nextLine();
-
-        loanService.createLoan(userId, isbn);
+        loanService.createLoan(currentUser.getUserId(), isbn);
         System.out.println("✅ Emprunt enregistré !");
     }
 
-    private static void returnBook() {
-        System.out.println("📥 RETOURNER UN LIVRE");
-        System.out.println("─".repeat(50));
+    // ==================== 7. RETOURNER UN LIVRE ====================
 
-        // Affiche les emprunts actifs
-        List<LoanDTO> activeLoans = loanService.getActiveLoans();
-        if (activeLoans.isEmpty()) {
-            System.out.println("❌ Aucun emprunt en cours.");
+    private static void returnBook() {
+        // Vérification : utilisateur connecté
+        if (currentUser == null) {
+            System.out.println("❌ Vous devez être connecté pour retourner un livre");
             return;
         }
 
-        System.out.println("Emprunts en cours :");
-        for (LoanDTO loan : activeLoans) {
+        System.out.println("=== RETOURNER UN LIVRE ===");
+
+        // Affiche les emprunts actifs de l'utilisateur
+        List<LoanDTO> myLoans = loanService.getActiveLoansByUserId(currentUser.getUserId());
+        if (myLoans.isEmpty()) {
+            System.out.println("❌ Vous n'avez aucun emprunt en cours.");
+            return;
+        }
+
+        System.out.println("Vos emprunts en cours :");
+        for (LoanDTO loan : myLoans) {
             System.out.println("  - " + loan);
         }
 
@@ -239,64 +261,25 @@ public class App {
         System.out.println("✅ Livre retourné !");
     }
 
-    private static void displayActiveLoans() {
-        List<LoanDTO> loans = loanService.getActiveLoans();
-        if (loans.isEmpty()) {
-            System.out.println("📋 Aucun emprunt en cours.");
+    // ==================== 8. VOIR MES EMPRUNTS ====================
+
+    private static void displayMyLoans() {
+        // Vérification : utilisateur connecté
+        if (currentUser == null) {
+            System.out.println("❌ Vous devez être connecté pour voir vos emprunts");
             return;
         }
 
-        System.out.println("📋 EMPRUNTS EN COURS (" + loans.size() + ")");
-        System.out.println("═".repeat(70));
-        for (LoanDTO loan : loans) {
+        List<LoanDTO> myLoans = loanService.getActiveLoansByUserId(currentUser.getUserId());
+        if (myLoans.isEmpty()) {
+            System.out.println("📋 Vous n'avez aucun emprunt en cours.");
+            return;
+        }
+
+        System.out.println("=== MES EMPRUNTS EN COURS (" + myLoans.size() + ") ===");
+        for (LoanDTO loan : myLoans) {
             System.out.println(loan);
         }
-    }
-
-    private static void displayAllLoans() {
-        List<LoanDTO> loans = loanService.getAllLoans();
-        if (loans.isEmpty()) {
-            System.out.println("📋 Aucun emprunt enregistré.");
-            return;
-        }
-
-        System.out.println("📋 TOUS LES EMPRUNTS (" + loans.size() + ")");
-        System.out.println("═".repeat(70));
-        for (LoanDTO loan : loans) {
-            System.out.println(loan);
-        }
-    }
-
-    // ==================== GESTION DES UTILISATEURS ====================
-
-    private static void displayUsers() {
-        List<UserDTO> users = userService.getAllUsers();
-        if (users.isEmpty()) {
-            System.out.println("👤 Aucun utilisateur enregistré.");
-            return;
-        }
-
-        System.out.println("👥 LISTE DES UTILISATEURS (" + users.size() + ")");
-        System.out.println("═".repeat(70));
-        for (UserDTO user : users) {
-            System.out.println(user);
-        }
-    }
-
-    // ==================== GESTION DES NOTIFICATIONS ====================
-
-    private static void changeNotificationMode() {
-        System.out.println("🔔 CHANGER LE MODE DE NOTIFICATION");
-        System.out.println("─".repeat(50));
-        System.out.println("1. Console (affichage dans le terminal)");
-        System.out.println("2. Email (simulation d'envoi d'email)");
-        System.out.print("\nVotre choix : ");
-
-        int choice = readIntInput();
-        scanner.nextLine(); // Consomme le retour à la ligne
-
-        String type = (choice == 2) ? "email" : "console";
-        notificationService.setNotificationStrategy(type);
     }
 
     // ==================== UTILITAIRES ====================

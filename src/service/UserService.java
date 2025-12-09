@@ -21,9 +21,9 @@ public class UserService {
     }
 
     /**
-     * Ajoute un nouvel utilisateur
+     * Inscrit un nouvel utilisateur (S'inscrire)
      */
-    public void addUser(String userId, String firstName, String lastName, String email) {
+    public void register(String userId, String firstName, String lastName, String email, String password) {
         // Validation métier
         if (userId == null || userId.trim().isEmpty()) {
             throw new IllegalArgumentException("L'ID utilisateur ne peut pas être vide");
@@ -31,9 +31,27 @@ public class UserService {
         if (email == null || !email.contains("@")) {
             throw new IllegalArgumentException("Email invalide");
         }
+        if (password == null || password.length() < 3) {
+            throw new IllegalArgumentException("Le mot de passe doit contenir au moins 3 caractères");
+        }
 
-        User user = new User(userId, firstName, lastName, email);
+        // Vérifier que l'userId n'existe pas déjà
+        if (userRepository.findById(userId).isPresent()) {
+            throw new IllegalArgumentException("Cet identifiant est déjà utilisé");
+        }
+
+        User user = new User(userId, firstName, lastName, email, password, false);
         userRepository.save(user);
+    }
+
+    /**
+     * Connecte un utilisateur (Se connecter)
+     * Retourne l'utilisateur si les identifiants sont corrects, null sinon
+     */
+    public User login(String userId, String password) {
+        return userRepository.findById(userId)
+                .filter(user -> user.getPassword().equals(password))
+                .orElse(null);
     }
 
     /**

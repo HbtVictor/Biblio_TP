@@ -150,6 +150,17 @@ public class LoanService {
     }
 
     /**
+     * Récupère les emprunts actifs d'un utilisateur spécifique
+     * Pour la fonctionnalité "Voir mes emprunts"
+     */
+    public List<LoanDTO> getActiveLoansByUserId(String userId) {
+        return loanRepository.findActiveLoans().stream()
+                .filter(loan -> loan.getUserId().equals(userId))
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Conversion Loan → LoanDTO
      */
     private LoanDTO convertToDTO(Loan loan) {

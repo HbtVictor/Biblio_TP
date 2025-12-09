@@ -87,9 +87,10 @@ public class DataStore {
                 .build());
 
         // Quelques utilisateurs de test
-        users.add(new User("U001", "Jean", "Dupont", "jean.dupont@email.com"));
-        users.add(new User("U002", "Marie", "Martin", "marie.martin@email.com"));
-        users.add(new User("U003", "Pierre", "Durand", "pierre.durand@email.com"));
+        // Un admin et deux utilisateurs normaux
+        users.add(new User("admin", "Admin", "Bibliothèque", "admin@biblio.com", "admin123", true));
+        users.add(new User("U001", "Jean", "Dupont", "jean.dupont@email.com", "password", false));
+        users.add(new User("U002", "Marie", "Martin", "marie.martin@email.com", "password", false));
     }
 
     /**
